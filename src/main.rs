@@ -40,7 +40,7 @@ fn main() {
     let light = Vector {
         x: 0.0,
         y: 30.0,
-        z: -12.0,
+        z: -30.0,
     };
     let coords = [camera, screen_tl, screen_tr, screen_bl, screen_br, light];
 
