@@ -11,7 +11,7 @@ mod linear_alg;
 mod shader;
 
 fn main() {
-    let height = 2.0;
+    let height = 1.2;
     let camera = Vector {
         x: 0.0,
         y: 0.0,
@@ -39,13 +39,13 @@ fn main() {
     };
     let light = Vector {
         x: 0.0,
-        y: 3.0,
-        z: -0.5,
+        y: 30.0,
+        z: -12.0,
     };
     let coords = [camera, screen_tl, screen_tr, screen_bl, screen_br, light];
 
-    let theta_z_frame = std::f64::consts::PI / 600.0 / 5.0;
-    let theta_x_frame = std::f64::consts::PI / 120.0 / 5.0;
+    let theta_z_frame = std::f64::consts::PI / 300.0;
+    let theta_x_frame = std::f64::consts::PI / 60.0;
     let mut theta_z = 0.0;
     let mut theta_x = 0.0;
 
@@ -54,8 +54,7 @@ fn main() {
         thread::sleep_until(next_frame);
         next_frame += Duration::from_secs_f32(1.0 / 30.0);
         let [camera, top_left, top_right, bottom_left, bottom_right, light] =
-            // coords.map(|c| rotate_y(rotate_z(c, theta_z), theta_x));
-            coords.map(|c| rotate_y(c, theta_x));
+            coords.map(|c| rotate_y(rotate_z(c, theta_z), theta_x));
 
         let frame = get_frame(
             0.8,
@@ -74,8 +73,7 @@ fn main() {
 
         // let grey_scale =
         //     r##".'`^",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"##.as_bytes();
-        let grey_scale = ".:-=+*#%@".as_bytes();
-        // let grey_scale = "0123456789".as_bytes();
+        let grey_scale = ".......::::::-----====+++**#%@".as_bytes();
         for line in frame {
             for char in line {
                 let char = char as usize;

@@ -30,10 +30,10 @@ pub fn get_frame(
     for i in 0..height {
         let mut row = Vec::with_capacity(width);
         for j in 0..width {
-            let top = i as f64 / (height as f64 - 1.0);
-            let bottom = 1.0 - top;
-            let left = j as f64 / (width as f64 - 1.0);
-            let right = 1.0 - left;
+            let bottom = i as f64 / (height as f64 - 1.0);
+            let top = 1.0 - bottom;
+            let right = j as f64 / (width as f64 - 1.0);
+            let left = 1.0 - right;
             row.push(get_pixel(
                 inner_radius,
                 outer_radius,
@@ -115,27 +115,24 @@ pub fn get_pixel(
         return 0;
     };
 
-    let x = (z - bx) / ax;
-    let y = (z - by) / ay;
+    let x = ax * z + bx;
+    let y = ay * z + by;
 
     let surface = Vector { x, y, z };
 
     let projection = Vector { x, y, z: 0.0 };
     let center = projection * (r_path / projection.length());
 
-    return (((projection - ray_eye).length().abs() - 1.5) * 50.0) as u8;
+    let normal = surface - center;
+    let normal = normal / normal.length();
+    let light_v = light - surface;
+    let light_v = light_v / light_v.length();
 
-    //
-    // let normal = surface - center;
-    // let normal = normal / normal.length();
-    // let light_v = light - surface;
-    // let light_v = light_v / light_v.length();
-    //
-    // let light_angle = normal.x * light_v.x + normal.y * light_v.y + normal.z * light_v.z;
-    // let light_angle = light_angle.max(0.0);
-    //
-    // let brightness = light_angle * 255.99;
-    // (brightness as u8).max(1)
+    let light_angle = normal.x * light_v.x + normal.y * light_v.y + normal.z * light_v.z;
+    let light_angle = light_angle.max(0.0);
+
+    let brightness = light_angle * 255.99;
+    (brightness as u8).max(1)
 }
 
 // #[test]
