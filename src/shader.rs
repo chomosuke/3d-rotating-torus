@@ -1,4 +1,4 @@
-use roots::{find_root_brent, find_root_newton_raphson, find_roots_quartic, SimpleConvergency};
+use roots::find_roots_quartic;
 
 use crate::linear_alg::Vector;
 
