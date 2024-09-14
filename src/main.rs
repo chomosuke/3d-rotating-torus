@@ -65,24 +65,15 @@ fn main() {
                 top_right,
                 bottom_left,
                 bottom_right,
-                width: 190,
+                width: 50,
                 height: 90,
             },
             light,
         );
 
-        // let grey_scale =
-        //     r##".'`^",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"##.as_bytes();
-        let grey_scale = ".......::::::-----====+++**#%@".as_bytes();
-        for line in frame {
-            for char in line {
-                let char = char as usize;
-                if char > 0 {
-                    let i = char * grey_scale.len() / (u8::MAX as usize + 1);
-                    print!("{}", grey_scale[i] as char);
-                } else {
-                    print!(" ");
-                }
+        for line in frame.into_iter() {
+            for char in line.chars() {
+                print!("{char}");
             }
             println!();
         }
