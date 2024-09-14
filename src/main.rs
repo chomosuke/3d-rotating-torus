@@ -15,7 +15,7 @@ fn main() {
     let camera = Vector {
         x: 0.0,
         y: 0.0,
-        z: -0.4 - height,
+        z: -1.0 - height,
     };
     let screen_tl = Vector {
         x: -1.0,
@@ -57,7 +57,7 @@ fn main() {
             coords.map(|c| c.rotate_z(theta_z).rotate_y(theta_x));
 
         let frame = get_frame(
-            0.7,
+            0.8,
             1.5,
             View {
                 camera,
@@ -73,8 +73,7 @@ fn main() {
 
         // let grey_scale =
         //     r##".'`^",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"##.as_bytes();
-        // let grey_scale = ".......::::::-----====+++**#%@".as_bytes();
-        let grey_scale = "....:::--=+*#%@".as_bytes();
+        let grey_scale = ".......::::::-----====+++**#%@".as_bytes();
         for line in frame {
             for char in line {
                 let char = char as usize;
