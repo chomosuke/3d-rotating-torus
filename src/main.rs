@@ -10,7 +10,7 @@ use shader::{get_frame, View};
 mod linear_alg;
 mod shader;
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let height = 1.2;
     let camera = Vector {
         x: 0.0,
@@ -50,13 +50,18 @@ fn main() {
     let mut theta_x = 0.0;
 
     let mut next_frame = Instant::now();
+    let mut frame = shader::Frame::with_capacity(120, 120);
+
+    let stdout = std::io::stdout();
+    let mut stdout = stdout.lock();
+
     loop {
         thread::sleep_until(next_frame);
         next_frame += Duration::from_secs_f32(1.0 / 30.0);
         let [camera, top_left, top_right, bottom_left, bottom_right, light] =
             coords.map(|c| rotate_y(rotate_z(c, theta_z), theta_x));
 
-        let frame = get_frame(
+        get_frame(
             0.8,
             1.5,
             View {
@@ -65,18 +70,19 @@ fn main() {
                 top_right,
                 bottom_left,
                 bottom_right,
-                width: 50,
-                height: 90,
+                view: &mut frame,
             },
             light,
         );
 
+        use std::io::Write;
         for line in frame.into_iter() {
             for char in line.chars() {
-                print!("{char}");
+                write!(stdout, "{char}")?;
             }
-            println!();
+            writeln!(stdout)?;
         }
+        stdout.flush()?;
 
         theta_x += theta_x_frame;
         theta_z += theta_z_frame;
