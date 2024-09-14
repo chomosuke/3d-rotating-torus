@@ -2,14 +2,146 @@ use roots::{find_roots_quartic, Roots};
 
 use crate::linear_alg::Vector;
 
-pub struct View {
+pub struct View<'a> {
     pub camera: Vector,
     pub top_left: Vector,
     pub top_right: Vector,
     pub bottom_left: Vector,
     pub bottom_right: Vector,
-    pub width: usize,
-    pub height: usize,
+    pub view: &'a mut Frame,
+}
+
+pub struct Frame {
+    height: usize,
+    width: usize,
+    inner: Vec<u8>,
+}
+
+pub struct FrameIter<'a> {
+    iter: &'a Frame,
+    row: usize,
+}
+
+impl<'a> Iterator for FrameIter<'a> {
+    type Item = FrameRow<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.row >= self.iter.height {
+            return None;
+        }
+
+        let out = FrameRow {
+            bytes: self.iter,
+            row: self.row,
+            idx: 0,
+        };
+        self.row += 1;
+
+        Some(out)
+    }
+}
+
+impl<'a> IntoIterator for &'a Frame {
+    type IntoIter = FrameIter<'a>;
+    type Item = FrameRow<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        FrameIter { iter: self, row: 0 }
+    }
+}
+
+pub struct FrameRow<'a> {
+    bytes: &'a Frame,
+    row: usize,
+    idx: usize,
+}
+
+impl<'a> FrameRow<'a> {
+    pub fn as_bytes(&self) -> &[u8] {
+        let start = self.row * self.bytes.height;
+        let end = start + self.bytes.width;
+        &self.bytes.inner[start..end]
+    }
+
+    pub fn row(&self) -> usize {
+        self.row
+    }
+
+    pub fn chars(self) -> FrameChars<'a> {
+        let Self { bytes, row, idx } = self;
+        FrameChars { bytes, row, idx }
+    }
+}
+
+pub struct FrameChars<'a> {
+    bytes: &'a Frame,
+    row: usize,
+    idx: usize,
+}
+
+// let grey_scale =
+//     r##".'`^",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"##.as_bytes();
+const GREY_SCALE: &[u8] = b".......::::::-----====+++**#%@";
+
+impl<'a> Iterator for FrameChars<'a> {
+    type Item = char;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx >= self.bytes.width {
+            return None;
+        }
+        let start = self.row * self.bytes.width;
+        let idx = start + self.idx;
+        self.idx += 1;
+
+        let char = self.bytes.inner[idx] as usize;
+
+        let c = if char > 0 {
+            let i = char * GREY_SCALE.len() / (u8::MAX as usize + 1);
+            GREY_SCALE[i] as char
+        } else {
+            ' '
+        };
+        Some(c)
+    }
+}
+
+impl<'a> Iterator for FrameRow<'a> {
+    type Item = u8;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx >= self.bytes.width {
+            return None;
+        }
+        let start = self.row * self.bytes.width;
+        let idx = start + self.idx;
+        self.idx += 1;
+        Some(self.bytes.inner[idx])
+    }
+}
+
+impl Frame {
+    pub fn with_capacity(width: usize, height: usize) -> Self {
+        let inner = Vec::with_capacity(width * height);
+        Self {
+            inner,
+            width,
+            height,
+        }
+    }
+
+    pub fn fill_char(&mut self, i: usize, j: usize, char: u8) {
+        let pos = j * self.width + i;
+        assert!(pos <= self.inner.len());
+
+        if pos == self.inner.len() {
+            self.push(char)
+        } else {
+            let a: &mut [u8] = self.inner.as_mut();
+            a[pos] = char;
+        }
+    }
+
+    pub fn push(&mut self, val: u8) {
+        self.inner.push(val)
+    }
 }
 
 pub fn get_frame(
@@ -21,33 +153,35 @@ pub fn get_frame(
         top_right,
         bottom_left,
         bottom_right,
-        width,
-        height,
+        view,
     }: View,
     light: Vector,
-) -> Vec<Vec<u8>> {
-    let mut frame = Vec::with_capacity(height);
+) {
+    let height = view.height;
+    let width = view.width;
+
     for i in 0..height {
-        let mut row = Vec::with_capacity(width);
         for j in 0..width {
             let bottom = i as f64 / (height as f64 - 1.0);
             let top = 1.0 - bottom;
             let right = j as f64 / (width as f64 - 1.0);
             let left = 1.0 - right;
-            row.push(get_pixel(
-                inner_radius,
-                outer_radius,
-                camera,
-                top_left * top * left
-                    + top_right * top * right
-                    + bottom_left * bottom * left
-                    + bottom_right * bottom * right,
-                light,
-            ));
+            view.fill_char(
+                j,
+                i,
+                get_pixel(
+                    inner_radius,
+                    outer_radius,
+                    camera,
+                    top_left * top * left
+                        + top_right * top * right
+                        + bottom_left * bottom * left
+                        + bottom_right * bottom * right,
+                    light,
+                ),
+            );
         }
-        frame.push(row);
     }
-    frame
 }
 
 /// The donut lay flat on the x-y plane centered around (0, 0, 0)
