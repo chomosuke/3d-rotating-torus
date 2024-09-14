@@ -4,7 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use linear_alg::{rotate_y, rotate_z, Vector};
+use linear_alg::Vector;
 use shader::{get_frame, View};
 
 mod linear_alg;
@@ -15,7 +15,7 @@ fn main() {
     let camera = Vector {
         x: 0.0,
         y: 0.0,
-        z: -1.0 - height,
+        z: -0.4 - height,
     };
     let screen_tl = Vector {
         x: -1.0,
@@ -54,10 +54,10 @@ fn main() {
         thread::sleep_until(next_frame);
         next_frame += Duration::from_secs_f32(1.0 / 30.0);
         let [camera, top_left, top_right, bottom_left, bottom_right, light] =
-            coords.map(|c| rotate_y(rotate_z(c, theta_z), theta_x));
+            coords.map(|c| c.rotate_z(theta_z).rotate_y(theta_x));
 
         let frame = get_frame(
-            0.8,
+            0.7,
             1.5,
             View {
                 camera,
@@ -73,7 +73,8 @@ fn main() {
 
         // let grey_scale =
         //     r##".'`^",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"##.as_bytes();
-        let grey_scale = ".......::::::-----====+++**#%@".as_bytes();
+        // let grey_scale = ".......::::::-----====+++**#%@".as_bytes();
+        let grey_scale = "....:::--=+*#%@".as_bytes();
         for line in frame {
             for char in line {
                 let char = char as usize;
